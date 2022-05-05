@@ -1,3 +1,5 @@
+//see this file https://steamcdn-a.akamaihd.net/steam/apps/108200/ss_03dcd94a3632504fbdfa92cc769c7f05913f55ad.1920x1080.jpg?t=1545399044
+
 // creating constraint
 create constraint pkCity
 for (c:City)
@@ -19,7 +21,10 @@ row.orig
 , row
 limit 4
 
-// Inserting data
+// // Inserting data
+// call apoc.periodic.iterate('query returning value'
+// , 'query operating on returned value'
+// , {batchSize, parallel})
 call apoc.periodic.iterate(
 "load csv with headers from \"https://raw.githubusercontent.com/rennyatwork/GeoPlot/master/DataSets/ticketToRide_edges.csv\" as row
 fieldterminator ';'
@@ -42,3 +47,43 @@ merge (orig)-[:is_connected{distance:row.distance, color:row.color}]-(dest)
 "
 , {batchSize:100, parallel:false}
 )
+
+/// create projection
+call gds.graph.project("everything", "*", "*")
+yield graphName as graph, nodeProjection, nodeCount as nodes, relationshipProjection, relationshipCount as rels
+
+/// example wcc
+/// only one comunity with 35 nodes
+call gds.wcc.stream("everything")
+yield nodeId, componentId
+with nodeId, componentId
+return distinct(componentId), count(nodeId) as size
+
+/// creating new projection
+call gds.graph.project(
+'distance'
+, '*'
+, 'is_connected'
+, {relationshipProperties:'distance'}
+)
+
+/// use of gds.util.asNode(nodeId)
+call gds.wcc.stream("everything")
+yield  nodeId, componentId
+return gds.util.asNode(nodeId) as name, componentId
+
+/// If nedd be convert distance to integer
+match ()-[r]-()
+set r.distance=apoc.convert.toInteger(r.distance)
+
+/// with threshold 2, we find 3 communities
+/// threshold: greater than (not greater or equal)
+call gds.wcc.stream('distance'
+,{
+	relationshipWeightProperty:'distance'
+    , threshold:2
+}
+)
+yield nodeId, componentId
+with  componentId, collect(gds.util.asNode(nodeId).cityName) as lstNode
+return componentId, lstNode
