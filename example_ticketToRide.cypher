@@ -1,5 +1,13 @@
 //see this file https://steamcdn-a.akamaihd.net/steam/apps/108200/ss_03dcd94a3632504fbdfa92cc769c7f05913f55ad.1920x1080.jpg?t=1545399044
 
+// show constraints
+show constraints
+
+// drop constraint
+drop constraint <constraintName>
+
+
+
 // creating constraint
 create constraint pkCity
 for (c:City)
@@ -47,6 +55,29 @@ merge (orig)-[:is_connected{distance:row.distance, color:row.color}]-(dest)
 "
 , {batchSize:100, parallel:false}
 )
+
+/// show projections
+call gds.graph.list()
+
+//node degree
+match (c1:City{cityName:"Montreal"})
+return apoc.node.degree(c1)
+
+// cities at 3 hops from Montreal
+match (c1:City{cityName:"Montreal"})-[*3]-(c2)
+return *
+
+match (c1:City{cityName:"Montreal"})-[r*3]-(c2)
+return *
+
+//explain
+// If you want to see the execution plan but not run the statement, prepend your Cypher statement with EXPLAIN
+explain match (c1:City{cityName:"Montreal"})-[r*2]-(c2)
+return *
+
+// profile
+profile match (c1:City{cityName:"Montreal"})-[r*2]-(c2)
+return *
 
 /// create projection
 call gds.graph.project("everything", "*", "*")
