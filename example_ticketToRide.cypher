@@ -63,12 +63,20 @@ call gds.graph.list()
 match (c1:City{cityName:"Montreal"})
 return apoc.node.degree(c1)
 
+
+
+
 // cities at 3 hops from Montreal
 match (c1:City{cityName:"Montreal"})-[*3]-(c2)
 return *
 
 match (c1:City{cityName:"Montreal"})-[r*3]-(c2)
 return *
+
+// Vancouver - Montreal in up to 5 hops
+match  (c1:City{cityName:"Vancouver"})-[r*1..5]-(c2:City{cityName:"Montreal"})
+return *
+
 
 //explain
 // If you want to see the execution plan but not run the statement, prepend your Cypher statement with EXPLAIN
@@ -98,10 +106,31 @@ call gds.graph.project(
 , {relationshipProperties:'distance'}
 )
 
+//------------- community-------------
 /// use of gds.util.asNode(nodeId)
+// wcc
 call gds.wcc.stream("everything")
 yield  nodeId, componentId
 return gds.util.asNode(nodeId) as name, componentId
+
+
+// louvain
+CALL gds.louvain.stream('myGraph')
+YIELD nodeId, communityId, intermediateCommunityIds
+RETURN gds.util.asNode(nodeId).name AS name, communityId, intermediateCommunityIds
+ORDER BY name ASC
+
+
+// article rank
+//ArticleRank is a variant of the Page Rank algorithm, which measures the transitive influence of nodes.
+CALL gds.articleRank.stream('distance')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).cityName AS name, score
+ORDER BY score DESC, name ASC
+
+size(lstName) as lstSize
+
+//------------------------------
 
 /// If nedd be convert distance to integer
 match ()-[r]-()
@@ -119,7 +148,7 @@ yield nodeId, componentId
 with  componentId, collect(gds.util.asNode(nodeId).cityName) as lstNode
 return componentId, lstNode
 
-
+//-------------centrality
 // betweeness
 call gds.betweenness.stream("everything")
 yield nodeId, score
@@ -131,15 +160,10 @@ CALL gds.degree.stream('everything')
 YIELD nodeId, score
 RETURN gds.util.asNode(nodeId).cityName as cityName, score AS degree
 ORDER BY degree DESC, cityName ASC
-
-// article rank
-//ArticleRank is a variant of the Page Rank algorithm, which measures the transitive influence of nodes.
-CALL gds.articleRank.stream('distance')
-YIELD nodeId, score
-RETURN gds.util.asNode(nodeId).cityName AS name, score
-ORDER BY score DESC, name ASC
+//-----------------------------
 
 
+//------------- path
 //shortest path (djikstra)
 MATCH (from:City{cityName:'Montreal'}), (to:City{cityName:'Vancouver'})
 CALL apoc.algo.dijkstra(from, to, 'is_connected', 'distance') yield path as path, weight as weight
@@ -150,6 +174,5 @@ MATCH (from:City{cityName:'Montreal'}), (to:City{cityName:'Toronto'})
 CALL apoc.algo.allSimplePaths(from, to, 'is_connected', 4) yield path
 RETURN *
 
-// Vancouver - Montreal in up to 5 hops
-match  (c1:City{cityName:"Vancouver"})-[r*1..5]-(c2:City{cityName:"Montreal"})
-return *
+
+//----------------------
