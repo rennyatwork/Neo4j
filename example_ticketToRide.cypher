@@ -118,3 +118,23 @@ call gds.wcc.stream('distance'
 yield nodeId, componentId
 with  componentId, collect(gds.util.asNode(nodeId).cityName) as lstNode
 return componentId, lstNode
+
+
+// betweeness
+call gds.betweenness.stream("everything")
+yield nodeId, score
+RETURN gds.util.asNode(nodeId).cityName , score
+ORDER BY score DESC
+
+//degree centrality
+CALL gds.degree.stream('everything')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).cityName as cityName, score AS degree
+ORDER BY degree DESC, cityName ASC
+
+// article rank
+//ArticleRank is a variant of the Page Rank algorithm, which measures the transitive influence of nodes.
+CALL gds.articleRank.stream('distance')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).cityName AS name, score
+ORDER BY score DESC, name ASC
