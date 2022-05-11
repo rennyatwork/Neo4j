@@ -138,3 +138,14 @@ CALL gds.articleRank.stream('distance')
 YIELD nodeId, score
 RETURN gds.util.asNode(nodeId).cityName AS name, score
 ORDER BY score DESC, name ASC
+
+
+//shortest path (djikstra)
+MATCH (from:City{cityName:'Montreal'}), (to:City{cityName:'Vancouver'})
+CALL apoc.algo.dijkstra(from, to, 'is_connected', 'distance') yield path as path, weight as weight
+RETURN path, weight
+
+// all simple paths (long to run)
+MATCH (from:City{cityName:'Montreal'}), (to:City{cityName:'Vancouver'})
+CALL apoc.algo.allSimplePaths(from, to, 'is_connected', 50) yield path
+RETURN *
