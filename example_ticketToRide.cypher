@@ -149,3 +149,7 @@ RETURN path, weight
 MATCH (from:City{cityName:'Montreal'}), (to:City{cityName:'Toronto'})
 CALL apoc.algo.allSimplePaths(from, to, 'is_connected', 4) yield path
 RETURN *
+
+// Vancouver - Montreal in up to 5 hops
+match  (c1:City{cityName:"Vancouver"})-[r*1..5]-(c2:City{cityName:"Montreal"})
+return *
