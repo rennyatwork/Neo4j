@@ -146,6 +146,6 @@ CALL apoc.algo.dijkstra(from, to, 'is_connected', 'distance') yield path as path
 RETURN path, weight
 
 // all simple paths (long to run)
-MATCH (from:City{cityName:'Montreal'}), (to:City{cityName:'Vancouver'})
-CALL apoc.algo.allSimplePaths(from, to, 'is_connected', 50) yield path
+MATCH (from:City{cityName:'Montreal'}), (to:City{cityName:'Toronto'})
+CALL apoc.algo.allSimplePaths(from, to, 'is_connected', 4) yield path
 RETURN *
