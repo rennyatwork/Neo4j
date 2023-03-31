@@ -1,0 +1,24 @@
+
+
+
+
+// query by relType
+match ()-[r]-()
+return type(r), count(r)
+
+// graph creation
+call gds.graph.create(
+    'default'
+        , '*'
+        , '*'
+)
+
+// community detection
+call gds.alpha.scc.stream('default', {})
+yield nodeId, componentId 
+with componentId, collect(nodeId) as lst
+with componentId, lst, size(lst) as lstSize
+//where componentId in [47526, 7268]
+where lstSize >1
+return  componentId, lst, lstSize
+order by lstSize desc
